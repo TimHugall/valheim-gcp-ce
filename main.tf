@@ -4,9 +4,11 @@ data "google_compute_image" "ubuntu2004" {
 }
 
 resource "google_storage_bucket" "valheim" {
-  name          = format("valheim-%s", lower(var.world_name)) # Could also use account ID?
-  force_destroy = true
-  location      = upper(var.region)
+  name = format("valheim-%s", lower(var.world_name)) # Could also use account ID?
+  versioning {
+    enabled = true
+  }
+  location = upper(var.region)
   provisioner "local-exec" {
     command = <<EOT
     cd objects/worlds
@@ -24,6 +26,17 @@ resource "google_storage_bucket_object" "compose" {
 resource "google_storage_bucket_object" "worlds" {
   name   = "worlds.zip"
   source = "objects/worlds.zip"
+  bucket = google_storage_bucket.valheim.name
+  lifecycle {
+    ignore_changes = [
+      md5hash
+    ]
+  }
+}
+
+resource "google_storage_bucket_object" "cron" {
+  name   = "backup.sh"
+  source = "objects/backup.sh"
   bucket = google_storage_bucket.valheim.name
 }
 
@@ -58,17 +71,19 @@ resource "google_compute_instance" "valheim" {
   metadata_startup_script = <<EOT
   curl -fsSL https://get.docker.com -o get-docker.sh
   sudo sh get-docker.sh
-  sudo apt -y install docker-compose unzip
+  sudo apt -y install docker-compose unzip zip
   gsutil cp gs://${google_storage_bucket.valheim.name}/${google_storage_bucket_object.compose.output_name} .
   gsutil cp gs://${google_storage_bucket.valheim.name}/${google_storage_bucket_object.worlds.output_name} .
+  gsutil cp gs://${google_storage_bucket.valheim.name}/${google_storage_bucket_object.cron.output_name} .
+  echo "/snap/bin/gsutil cp /valheim/saves/${google_storage_bucket_object.worlds.output_name} gs://${google_storage_bucket.valheim.name}/${google_storage_bucket_object.worlds.output_name}" >> ${google_storage_bucket_object.cron.output_name}
   mkdir -p ./valheim/saves/worlds
-  unzip worlds.zip -d ./valheim/saves/worlds/
+  unzip ${google_storage_bucket_object.worlds.output_name} -d ./valheim/saves/worlds/
   chown -R ubuntu:ubuntu ./valheim
-  sed -i 's/SERVERNAME/${var.server_name}/g' docker-compose.yml
-  sed -i 's/WORLDNAME/${var.world_name}/g' docker-compose.yml
-  sed -i 's/SERVERPASSWORD/${var.server_password}/g' docker-compose.yml
+  sed -i 's/SERVERNAME/${var.server_name}/g' ${google_storage_bucket_object.compose.output_name}
+  sed -i 's/WORLDNAME/${var.world_name}/g' ${google_storage_bucket_object.compose.output_name}
+  sed -i 's/SERVERPASSWORD/${var.server_password}/g' ${google_storage_bucket_object.compose.output_name}
   docker-compose up -d
-  (crontab -l 2>/dev/null; echo "*/5 * * * * /snap/bin/gsutil cp /valheim/saves/worlds/* gs://${google_storage_bucket.valheim.name}/backup-worlds/") | crontab -
+  (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/bash ${google_storage_bucket_object.cron.output_name}) | crontab -
   EOT
 
   # Apply the firewall rule to allow external IPs to access this instance
