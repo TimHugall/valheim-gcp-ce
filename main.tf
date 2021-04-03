@@ -33,7 +33,8 @@ resource "google_storage_bucket_object" "worlds" {
   lifecycle {
     ignore_changes = [
       md5hash,
-      crc32c
+      crc32c,
+      detect_md5hash
     ]
     prevent_destroy = true
   }
