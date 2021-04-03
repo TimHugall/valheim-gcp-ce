@@ -44,7 +44,7 @@ resource "google_compute_instance" "valheim" {
   allow_stopping_for_update = true
 
   service_account {
-    scopes = [ "storage-rw" ] # TODO refine further
+    scopes = ["storage-rw"] # TODO refine further
   }
 
   network_interface {
