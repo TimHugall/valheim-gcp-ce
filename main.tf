@@ -32,7 +32,8 @@ resource "google_storage_bucket_object" "worlds" {
   bucket = google_storage_bucket.valheim.name
   lifecycle {
     ignore_changes = [
-      md5hash
+      md5hash,
+      crc32c
     ]
     prevent_destroy = true
   }
