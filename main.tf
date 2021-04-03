@@ -49,7 +49,8 @@ resource "google_storage_bucket_object" "cron" {
 resource "google_compute_instance" "valheim" {
   depends_on = [
     google_storage_bucket_object.worlds,
-    google_storage_bucket_object.compose
+    google_storage_bucket_object.compose,
+    google_storage_bucket_object.cron
   ]
   name         = "valheim"
   machine_type = "e2-medium" # 2 vCPUs, 4G RAM
