@@ -89,7 +89,7 @@ resource "google_compute_instance" "valheim" {
   sed -i 's/WORLDNAME/${var.world_name}/g' ${google_storage_bucket_object.compose.output_name}
   sed -i 's/SERVERPASSWORD/${var.server_password}/g' ${google_storage_bucket_object.compose.output_name}
   docker-compose up -d
-  (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/bash ${google_storage_bucket_object.cron.output_name}) | crontab -
+  (crontab -l 2>/dev/null; echo "*/5 * * * * /bin/bash /${google_storage_bucket_object.cron.output_name}") | crontab -
   EOT
 
   # Apply the firewall rule to allow external IPs to access this instance
