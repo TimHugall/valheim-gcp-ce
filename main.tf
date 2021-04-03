@@ -15,6 +15,9 @@ resource "google_storage_bucket" "valheim" {
     zip -r ../worlds.zip .
     EOT
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "google_storage_bucket_object" "compose" {
@@ -31,6 +34,7 @@ resource "google_storage_bucket_object" "worlds" {
     ignore_changes = [
       md5hash
     ]
+    prevent_destroy = true
   }
 }
 
