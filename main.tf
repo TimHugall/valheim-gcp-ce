@@ -59,8 +59,8 @@ resource "google_compute_instance" "valheim" {
   curl -fsSL https://get.docker.com -o get-docker.sh
   sudo sh get-docker.sh
   sudo apt -y install docker-compose unzip
-  gsutil cp gs://${google_storage_bucket.valheim.name}/docker-compose.yml .
-  gsutil cp gs://${google_storage_bucket.valheim.name}/worlds.zip .
+  gsutil cp gs://${google_storage_bucket.valheim.name}/${google_storage_bucket_object.compose.output_name} .
+  gsutil cp gs://${google_storage_bucket.valheim.name}/${google_storage_bucket_object.worlds.output_name} .
   mkdir -p ./valheim/saves/worlds
   unzip worlds.zip -d ./valheim/saves/worlds/
   chown -R ubuntu:ubuntu ./valheim
