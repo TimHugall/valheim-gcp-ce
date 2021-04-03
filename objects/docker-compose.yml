@@ -15,6 +15,7 @@ services:
       - PUBLIC=1
       - AUTO_UPDATE=1
       - AUTO_UPDATE_SCHEDULE="0 1 * * *"
+      - AUTO_UPDATE_PAUSE_WITH_PLAYERS=1
     volumes:
       - ./valheim/saves:/home/steam/.config/unity3d/IronGate/Valheim
       - ./valheim/server:/home/steam/valheim
